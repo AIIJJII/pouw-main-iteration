@@ -313,7 +313,7 @@ def _varintEncode(n):
 def _assemble_submission(tmpl, data, dataid, nonce, foreign):
     data = data[:76]
     data += _pack('<I', nonce)
-    data += data[80:140]
+    data += data[80:340]
 
     if foreign or ('submit/truncate' not in tmpl.mutations or dataid):
         data += _varintEncode(1 + len(tmpl.txns))

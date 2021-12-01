@@ -25,7 +25,7 @@ def create_miner_based_on_cmd_parameters():
 class Block:
     def __init__(self, template):
         (data, dataid) = template.get_data()
-        self.header = data[:140]
+        self.header = data[:340]
         self.hexdata = template.get_blkhex(b'', dataid)
         self.target = template.target
 
@@ -94,7 +94,7 @@ class Miner:
 
     @staticmethod
     def calculate_zero_nonce_hash(block_header_hex):
-        blk_hex = block_header_hex[:76] + b'\0' * 4 + block_header_hex[80: 140]
+        blk_hex = block_header_hex[:76] + b'\0' * 4 + block_header_hex[80:340]
         block_header = unhexlify(blk_hex)
         return hexlify(double_sha256(block_header)).decode('ascii')
 

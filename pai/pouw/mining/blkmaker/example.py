@@ -58,11 +58,11 @@ if __name__ == '__main__':
     template.add(req)
     while (template.time_left() and template.work_left()):
         (data, dataid) = template.get_data()
-        assert (len(data) >= 140)
+        assert (len(data) >= 340)
 
         # mine the right nonce
         for nonce in range(0x7fffffff):
-            data = data[:76] + struct.pack('!I', nonce) + data[80:140]
+            data = data[:76] + struct.pack('!I', nonce) + data[80:340]
             blkhash = double_sha256(data)
             if blkhash[28:] == b'\0\0\0\0':
                 break
