@@ -122,13 +122,14 @@ class Miner:
 
         # block hash calculation requires a fixed size block header serialization (340 bytes)
         message_history_id_len = len(message_history_id)
-        message_history_id_padding_len = self.POUW_MESSAGE_HISTORY_ID_SIZE - message_history_id_len - 1
+        message_history_id_padding_len = self.POUW_MESSAGE_HISTORY_ID_SIZE - message_history_id_len
         message_id_len = len(msg_id)
-        message_id_padding_len = self.POUW_MESSAGE_ID_SIZE - message_id_len - 1
+        message_id_padding_len = self.POUW_MESSAGE_ID_SIZE - message_id_len
 
-        pouw = (message_history_id_len).to_bytes(1, 'little') + message_history_id + \
+        # size fields always indicate 100 bytes
+        pouw = (self.POUW_MESSAGE_HISTORY_ID_SIZE).to_bytes(1, 'little') + message_history_id + \
                b'\0' * message_history_id_padding_len + \
-               (len(msg_id)).to_bytes(1, 'little') + msg_id + \
+               (self.POUW_MESSAGE_HISTORY_ID_SIZE).to_bytes(1, 'little') + msg_id + \
                b'\0' * message_id_padding_len
 
         # add nonce and pouw fields
