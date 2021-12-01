@@ -102,6 +102,16 @@ class Template:
         self.sizelimit = json.get('sizelimit', self.sizelimit)
         self.version = json['version']
 
+        self.stakedifficulty = int(json['stakedifficulty'], base=16)
+        self.votebits = json['votebits']
+        self.ticketpoolsize = json['ticketpoolsize']
+        self.ticketlotterystate = _a2b_hex(json['ticketlotterystate'])
+        self.voters = json['voters']
+        self.freshstake = json['freshstake']
+        self.revocations = json['revocations']
+        self.extradata = _a2b_hex(json['extradata'])
+        self.stakeversion = json['stakeversion']
+
         self.cbvalue = json.get('coinbasevalue', None)
         self.workid = json.get('workid', None)
 

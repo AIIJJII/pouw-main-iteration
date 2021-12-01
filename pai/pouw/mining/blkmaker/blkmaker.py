@@ -11,6 +11,7 @@ from time import time as _time
 import base58 as _base58
 from pai.pouw.mining.blkmaker.extra import _Transaction, SIZEOF_WORKID, _request
 
+HARDFORK_VERSION_BIT = 0x80000000
 
 def sha256_digest(data):
     return _sha256(data).digest()
@@ -200,7 +201,7 @@ def _set_times(tmpl, usetime=None, out_expire=None, can_roll_ntime=False):
 
 
 def _sample_data(tmpl, dataid):
-    cbuf = _pack('<I', tmpl.version)
+    cbuf = _pack('<i', tmpl.version)
     cbuf += tmpl.prevblk
 
     cbtxndata = _extranonce(tmpl, dataid)
@@ -214,6 +215,18 @@ def _sample_data(tmpl, dataid):
 
     cbuf += _pack('<I', tmpl.curtime)
     cbuf += tmpl.diffbits
+    cbuf += _pack('<I', 0) # dummy nonce
+
+    cbuf += _pack('<q', tmpl.stakedifficulty)
+    cbuf += _pack('<H', tmpl.votebits)
+    cbuf += _pack('<I', tmpl.ticketpoolsize)
+    cbuf += tmpl.ticketlotterystate
+    cbuf += _pack('<H', tmpl.voters)
+    cbuf += _pack('<B', tmpl.freshstake)
+    cbuf += _pack('<B', tmpl.revocations)
+    cbuf += tmpl.extradata
+    cbuf += _pack('<I', tmpl.stakeversion)
+
     return cbuf
 
 
@@ -246,7 +259,7 @@ def get_mdata(tmpl, usetime=None, out_expire=None, extranoncesz=SIZEOF_WORKID, c
         # Avoid overlapping with blkmk_get_data use
         extranoncesz += 1
 
-    cbuf = _pack('<I', tmpl.version)
+    cbuf = _pack('<i', tmpl.version)
     cbuf += tmpl.prevblk
 
     dummy = b'\0' * extranoncesz
@@ -258,6 +271,16 @@ def get_mdata(tmpl, usetime=None, out_expire=None, extranoncesz=SIZEOF_WORKID, c
 
     cbuf += _set_times(tmpl, usetime, out_expire, can_roll_ntime)
     cbuf += tmpl.diffbits
+
+    cbuf += _pack('<q', tmpl.stakedifficulty)
+    cbuf += _pack('<H', tmpl.votebits)
+    cbuf += _pack('<I', tmpl.ticketpoolsize)
+    cbuf += tmpl.ticketlotterystate
+    cbuf += _pack('<H', tmpl.voters)
+    cbuf += _pack('<B', tmpl.freshstake)
+    cbuf += _pack('<B', tmpl.revocations)
+    cbuf += tmpl.extradata
+    cbuf += _pack('<I', tmpl.stakeversion)
 
     return (cbuf, cbtxn, cbextranonceoffset[0], tmpl._mrklbranch)
 
@@ -290,6 +313,7 @@ def _varintEncode(n):
 def _assemble_submission(tmpl, data, dataid, nonce, foreign):
     data = data[:76]
     data += _pack('<I', nonce)
+    data += data[80:140]
 
     if foreign or ('submit/truncate' not in tmpl.mutations or dataid):
         data += _varintEncode(1 + len(tmpl.txns))

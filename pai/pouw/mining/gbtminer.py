@@ -25,12 +25,15 @@ def create_miner_based_on_cmd_parameters():
 class Block:
     def __init__(self, template):
         (data, dataid) = template.get_data()
-        self.header = data[:76]
+        self.header = data[:140]
         self.hexdata = template.get_blkhex(b'', dataid)
         self.target = template.target
 
 
 class Miner:
+    POUW_MESSAGE_HISTORY_ID_SIZE = 100
+    POUW_MESSAGE_ID_SIZE = 100
+
     def __init__(self, iterations_announced, server_ip, paicoin_cfg_file):
         self._pai_address = None
         self._server_ip = server_ip
@@ -91,7 +94,8 @@ class Miner:
 
     @staticmethod
     def calculate_zero_nonce_hash(block_header_hex):
-        block_header = unhexlify(block_header_hex)[:76]
+        blk_hex = block_header_hex[:76] + b'\0' * 4 + block_header_hex[80: 140]
+        block_header = unhexlify(blk_hex)
         return hexlify(double_sha256(block_header)).decode('ascii')
 
     # build zero-nonce block and return its hash
@@ -115,11 +119,20 @@ class Miner:
         block = self._blocks.pop(0)
 
         nonce = self.calculate_nonce(end_it_model_hash, local_message_map)
-        pouw = (len(message_history_id)).to_bytes(1, 'little') + message_history_id + \
-               (len(msg_id)).to_bytes(1, 'little') + msg_id
+
+        # block hash calculation requires a fixed size block header serialization (340 bytes)
+        message_history_id_len = len(message_history_id)
+        message_history_id_padding_len = self.POUW_MESSAGE_HISTORY_ID_SIZE - message_history_id_len - 1
+        message_id_len = len(msg_id)
+        message_id_padding_len = self.POUW_MESSAGE_ID_SIZE - message_id_len - 1
+
+        pouw = (message_history_id_len).to_bytes(1, 'little') + message_history_id + \
+               b'\0' * message_history_id_padding_len + \
+               (len(msg_id)).to_bytes(1, 'little') + msg_id + \
+               b'\0' * message_id_padding_len
 
         # add nonce and pouw fields
-        header = block.header + nonce + pouw
+        header = block.header[:76] + nonce + block.header[80:140] + pouw
 
         # test block hash
         blkhash = double_sha256(header)
